@@ -1,17 +1,37 @@
 #include <Arduino.h>
-// #include <.env.h>
+#include <env.h>
 
 #include <WiFi.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-const char* ssid     = "ssid";     
-const char* password = "password";
+long read_shift_regs();
+void print_byte();
+void draw_pins(char *msg);
+// const char* ssid     = "ssid";     
+// const char* password = "password";
 
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 3600;
 const int   daylightOffset_sec = 3600;
+
+const char* currentTime;
+const char* oldTime;
+
+const uint8_t data_pin = 12; // W-Brown 9 pin, Q7 /данные или MISO DataPin
+const uint8_t shld_pin = 13; // W-Orange 1 pin, !PL /защелка LoadPin
+const uint8_t clk_pin = 16; // Orange 2 pin, CP /такты или SCK ClockPin
+const uint8_t ce_pin = 15; // W-Blue 15 pin, !CE / чипселект EnablePin
+// const uint8_t led_pin10 = 10; // 
+// const uint8_t led_pin11 = 11; // 
+// const uint8_t led_pin12 = 12; // 
+
+#define NUMBER_OF_SHIFT_CHIPS   1
+#define DATA_WIDTH   NUMBER_OF_SHIFT_CHIPS * 8
+
+unsigned long pinValues;
+unsigned long oldPinValues;
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
@@ -69,25 +89,48 @@ if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
   // display.setTextAlignment(TEXT_ALIGN_LEFT);
   // display.setFont(ArialMT_Plain_10);
   display.setCursor(5, 5); 
-  display.println("Access Point connected");
+  display.println("Acc Point connected");
   display.setCursor(5, 18); 
   display.println( "AP IP address: ");
-  display.setCursor(5, 31); 
+  display.setCursor(5, 28); 
   display.println(WiFi.localIP().toString());
-  display.setCursor(5, 44); 
-  display.setCursor(5, 57); 
+  display.setCursor(5, 38); 
+  display.setCursor(5, 48); 
   display.display();
+
+  //74hc165 shift register
+  pinMode(shld_pin, OUTPUT); //LoadPin
+  pinMode(ce_pin, OUTPUT); // EnablePin
+  pinMode(clk_pin, OUTPUT);// ClockPin
+  pinMode(data_pin, INPUT);  //DataPin
+
+  // pinMode(led_pin10, OUTPUT);// 
+  // pinMode(led_pin11, OUTPUT);// 
+  // pinMode(led_pin12, OUTPUT);// 
+
+  // выключаем регистр
+  digitalWrite(clk_pin, HIGH);
+  digitalWrite(shld_pin, HIGH);
+  Serial.println("74hc165 test starts");
+
+  draw_pins("-       -");
+  delay(1000);
+  pinValues = read_shift_regs();
+  print_byte();
+  oldPinValues = pinValues;
+
   delay(1000);
 }
+
 void draw_time(char *msg) {
-  display.setCursor(5, 57);
+  display.setCursor(5, 55);
   // display.setTextAlignment(TEXT_ALIGN_CENTER);
   // display.setFont(ArialMT_Plain_24);
   // display.setTextColor(WHITE, BLACK); 
   // display.println("            ");
   // display.display();
   display.setTextColor(WHITE, BLACK); 
-  display.setCursor(5, 57);
+  display.setCursor(5, 55);
   display.println(msg);
   display.display();
   // delay(100);
@@ -95,13 +138,112 @@ void draw_time(char *msg) {
   Serial.println(msg);
 }
 
+void draw_pins(char *msg) {
+  display.setCursor(5, 45);
+  // display.setTextAlignment(TEXT_ALIGN_CENTER);
+  // display.setFont(ArialMT_Plain_24);
+  // display.setTextColor(WHITE, BLACK); 
+  // display.println("            ");
+  // display.display();
+  display.setTextColor(WHITE, BLACK); 
+  // display.setCursor(5, 45);
+  char* msg2 = "Pins: ";
+  display.println(msg);
+  display.display();
+  // delay(100);
+
+  Serial.println(msg);
+}
+
+
 void loop() {
   struct tm timeinfo;
+  oldTime = "";
   if (getLocalTime(&timeinfo)) {
       char time_str[16];
       strftime(time_str, 16, "%H:%M:%S", &timeinfo);
 
-      draw_time(time_str);
+      if(oldTime != time_str) {
+        oldTime = time_str;
+        draw_time(time_str);
+      }
   }  
+  // draw_pins("11100000");
+  pinValues = read_shift_regs();
+
+  if(pinValues != oldPinValues)
+  {
+      print_byte();
+      oldPinValues = pinValues;
+  }
+
   delay(1000);
+}
+
+long read_shift_regs()
+{
+    long bitVal;
+    unsigned long bytesVal = 0;
+
+    digitalWrite(ce_pin, HIGH); //EnablePin
+    digitalWrite(shld_pin, LOW); //LoadPin
+    delayMicroseconds(5);
+    digitalWrite(shld_pin, HIGH); //LoadPin
+    digitalWrite(ce_pin, LOW); //EnablePin
+
+    for(int i = 0; i < DATA_WIDTH; i++)
+    {
+        bitVal = digitalRead(data_pin);
+        bytesVal |= (bitVal << ((DATA_WIDTH-1) - i));
+
+        digitalWrite(clk_pin, HIGH);
+        delayMicroseconds(5);
+        digitalWrite(clk_pin, LOW);
+    }
+
+    return(bytesVal);
+}
+
+void print_byte() { 
+  byte i; 
+
+  Serial.println("*Shift Register Values:*\r\n");
+
+  for(byte i=0; i<=DATA_WIDTH-1; i++) 
+  { 
+    Serial.print("P");
+    Serial.print(i+1);
+    Serial.print(" "); 
+  }
+  Serial.println();
+  for(byte i=0; i<=DATA_WIDTH-1; i++) 
+  { 
+    Serial.print(pinValues >> i & 1, BIN); 
+    
+    if(i>8){Serial.print(" ");}
+    Serial.print("  "); 
+    display.setCursor(5 + i * 10, 45);
+    display.setTextColor(WHITE, BLACK); 
+    // display.setCursor(5, 45);
+    char* msg2 = "Pins: ";
+    display.println(pinValues >> i & 1, BIN);
+    display.println(" ");
+    display.display();
+  } 
+  
+  
+  Serial.println("pinValues"); 
+  Serial.print("Pin1:  "); 
+  Serial.println(pinValues >> 0 & 1); 
+  // sw_led(led_pin10, pinValues >> 0 & 1);
+  Serial.print("Pin2:  "); 
+  Serial.println(pinValues >> 1 & 1); 
+  // sw_led(led_pin11, pinValues >> 1 & 1);
+  Serial.print("Pin3:  "); 
+  Serial.println(pinValues >> 2 & 1); 
+  // sw_led(led_pin12, pinValues >> 2 & 1);
+  char* c = (char*) pinValues;
+  // draw_pins(c);
+  
+
 }

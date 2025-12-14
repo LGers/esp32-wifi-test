@@ -5,3 +5,5 @@
 .vscode/ipch
 .vscode/
 .env.h
+src/.env.h
+src/env.h
