@@ -5,6 +5,8 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
 
 long read_shift_regs();
 void print_byte();
@@ -27,6 +29,9 @@ const uint8_t ce_pin = 15; // W-Blue 15 pin, !CE / чипселект EnablePin
 // const uint8_t led_pin11 = 11; // 
 // const uint8_t led_pin12 = 12; // 
 
+bool ledState = 0;
+const int ledPin = 2; //TODO del it
+
 #define NUMBER_OF_SHIFT_CHIPS   1
 #define DATA_WIDTH   NUMBER_OF_SHIFT_CHIPS * 8
 
@@ -44,7 +49,86 @@ unsigned long oldPinValues;
 // #define ssid
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+//Socket-------------------------------
+// Create AsyncWebServer object on port 80
+AsyncWebServer server(80);
+AsyncWebSocket ws("/ws");
+
+void notifyClients() {
+  ws.textAll(String(ledState));
+  ws.textAll(String("pinValues: "));
+  ws.textAll(String("pinValues: " + String(pinValues)));
+  // ws.textAll(String(pinValues));
+  Serial.print("notifyClients pinValues: ");
+  Serial.println(pinValues);
+
+  String msg_str = "";
+  for(byte i=0; i<=DATA_WIDTH-1; i++) 
+  { 
+    Serial.print(pinValues >> i & 1, BIN); 
+    msg_str += pinValues >> i & 1, BIN;
+  } 
+  ws.textAll(String("pinValues2: " + String(msg_str)));
+}
+
+void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
+  AwsFrameInfo *info = (AwsFrameInfo*)arg;
+  if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
+    data[len] = 0;
+    if (strcmp((char*)data, "toggle") == 0) {
+      ledState = !ledState;
+      notifyClients();
+    }
+    if (strcmp((char*)data, "blink") == 0) {
+      // Serial.println("blink");
+      // blink(3, 100);
+      notifyClients();
+    }
+  }
+}
+
+void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
+             void *arg, uint8_t *data, size_t len) {
+  switch (type) {
+    case WS_EVT_CONNECT:
+      Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+      break;
+    case WS_EVT_DISCONNECT:
+      Serial.printf("WebSocket client #%u disconnected\n", client->id());
+      break;
+    case WS_EVT_DATA:
+      handleWebSocketMessage(arg, data, len);
+      break;
+    case WS_EVT_PONG:
+    case WS_EVT_ERROR:
+      break;
+  }
+}
+
+void initWebSocket() {
+  ws.onEvent(onEvent);
+  server.addHandler(&ws);
+}
+
+String processor(const String& var){
+  Serial.println(var);
+  if(var == "STATE"){
+    if (ledState){
+      return "ON";
+    }
+    else{
+      return "OFF";
+    }
+  }
+  return String();
+}
+//Socket-------------------------------
+
 void setup() {
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW);
+
   Wire.begin(5, 4);
   Serial.begin(115200);
 if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
@@ -119,6 +203,11 @@ if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
   print_byte();
   oldPinValues = pinValues;
 
+  //Socket setup--------------------------------
+  initWebSocket();
+  // Start server
+  server.begin();
+  //Socket setup--------------------------------
   delay(1000);
 }
 
@@ -159,15 +248,15 @@ void draw_pins(char *msg) {
 void loop() {
   struct tm timeinfo;
   oldTime = "";
-  if (getLocalTime(&timeinfo)) {
-      char time_str[16];
-      strftime(time_str, 16, "%H:%M:%S", &timeinfo);
+  // if (getLocalTime(&timeinfo)) {
+  //     char time_str[16];
+  //     strftime(time_str, 16, "%H:%M:%S", &timeinfo);
 
-      if(oldTime != time_str) {
-        oldTime = time_str;
-        draw_time(time_str);
-      }
-  }  
+  //     if(oldTime != time_str) {
+  //       oldTime = time_str;
+  //       draw_time(time_str);
+  //     }
+  // }  
   // draw_pins("11100000");
   pinValues = read_shift_regs();
 
@@ -175,9 +264,11 @@ void loop() {
   {
       print_byte();
       oldPinValues = pinValues;
+      notifyClients();
   }
 
-  delay(1000);
+  ws.cleanupClients();
+  // delay(1000);
 }
 
 long read_shift_regs()
