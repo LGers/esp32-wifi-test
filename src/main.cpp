@@ -21,10 +21,10 @@ const int   daylightOffset_sec = 3600;
 const char* currentTime;
 const char* oldTime;
 
-const uint8_t data_pin = 0; // W-Brown 9 pin, Q7 /данные или MISO DataPin 12
-const uint8_t shld_pin = 14; // W-Orange 1 pin, !PL /защелка LoadPin
-const uint8_t clk_pin = 25; // Orange 2 pin, CP /такты или SCK ClockPin
-const uint8_t ce_pin = 26; // W-Blue 15 pin, !CE / чипселект EnablePin
+const uint8_t data_pin = 15; // W-Brown 9 pin, Q7 /данные или MISO DataPin 12 / ESP oled pin 0
+const uint8_t shld_pin = 17; // W-Orange 1 pin, !PL /защелка LoadPin / ESP oled pin 14
+const uint8_t clk_pin = 18; // Orange 2 pin, CP /такты или SCK ClockPin / ESP oled pin 25
+const uint8_t ce_pin = 16; // W-Blue 15 pin, !CE / чипселект EnablePin / ESP oled pin 26
 // const uint8_t led_pin10 = 10; // 
 // const uint8_t led_pin11 = 11; // 
 // const uint8_t led_pin12 = 12; // 
@@ -55,6 +55,19 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 // AsyncWebServer server(80);
 AsyncWebServer server(3000);
 AsyncWebSocket ws("/ws");
+
+void blink(int qtty, int time) {
+  for (int i=0; i<qtty; i++) {
+    ledState=!ledState;
+    digitalWrite(ledPin, HIGH);
+    delay(time);
+    ledState=!ledState;
+    digitalWrite(ledPin, LOW);
+    delay(time);
+  }
+  digitalWrite(ledPin, !ledState);
+  digitalWrite(ledPin, 0);
+}
 
 String getPinData() {
   String msg_str = "";
@@ -283,9 +296,10 @@ void loop() {
       print_byte();
       oldPinValues = pinValues;
       notifyClients();
+      blink(3 , 300);
   }
 
-  print_byte();
+  // print_byte();
   ws.cleanupClients();
   delay(1000);
 }
