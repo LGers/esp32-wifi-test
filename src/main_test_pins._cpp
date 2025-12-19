@@ -1,0 +1,89 @@
+#include <Arduino.h>
+#include <env.h>
+
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+const uint8_t pin1 = 0; // 
+const uint8_t pin2 = 2; // 
+const uint8_t pin3 = 14; // 
+const uint8_t pin4 = 25; // 
+const uint8_t pin5 = 26; // 
+
+#define NUMBER_OF_SHIFT_CHIPS   1
+#define DATA_WIDTH   NUMBER_OF_SHIFT_CHIPS * 8
+
+unsigned long pinValues;
+unsigned long oldPinValues;
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define SCREEN_ADDRESS 0x3C // Address 0x3D for 128x64
+
+
+// OLED Display 128x64
+// SSD1306Wire  display(0x3c, 5, 4);
+
+// #define ssid
+// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+void setup() {
+
+
+  pinMode(pin1, OUTPUT);
+  digitalWrite(pin1, LOW);
+  pinMode(pin2, OUTPUT);
+  digitalWrite(pin2, LOW);
+  pinMode(pin3, OUTPUT);
+  digitalWrite(pin3, LOW);
+  pinMode(pin4, OUTPUT);
+  digitalWrite(pin4, LOW);
+  pinMode(pin5, OUTPUT);
+  digitalWrite(pin5, LOW);
+
+  Wire.begin(5, 4);
+  Serial.begin(115200);
+if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;);
+  }
+  else {
+    Serial.println(F("SSD1306 allocation GOOD"));
+  }
+  delay(2000);
+  display.clearDisplay();               // Clear display buffer
+  display.setTextSize(1.5);             // Set text size
+  display.setTextColor(WHITE);          // Set text color
+  display.setCursor(5, 5);              // Define position
+  display.println("Hello, Leonid Meow!");     // Display static text
+  display.setCursor(5, 18);      
+  display.print("ssid: ");  
+  display.println(ssid);  
+  display.setCursor(5, 31);      
+  display.print("pass: ");  
+  display.println(password);  
+  display.drawRect(0, 0, 128, 43, WHITE);// Draw rectangle
+  display.display();                    // Display the text and shape on the screen
+
+  delay(1000);
+}
+
+
+
+void loop() {
+  digitalWrite(pin1, LOW);
+  digitalWrite(pin2, LOW);
+  digitalWrite(pin3, LOW);
+  digitalWrite(pin4, LOW);
+  digitalWrite(pin5, LOW);
+  delay(1000);
+
+  digitalWrite(pin1, HIGH);
+  digitalWrite(pin2, HIGH);
+  digitalWrite(pin3, HIGH);
+  digitalWrite(pin4, HIGH);
+  digitalWrite(pin5, HIGH);
+  delay(1000);
+}

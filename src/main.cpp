@@ -21,10 +21,10 @@ const int   daylightOffset_sec = 3600;
 const char* currentTime;
 const char* oldTime;
 
-const uint8_t data_pin = 12; // W-Brown 9 pin, Q7 /данные или MISO DataPin
-const uint8_t shld_pin = 13; // W-Orange 1 pin, !PL /защелка LoadPin
-const uint8_t clk_pin = 16; // Orange 2 pin, CP /такты или SCK ClockPin
-const uint8_t ce_pin = 15; // W-Blue 15 pin, !CE / чипселект EnablePin
+const uint8_t data_pin = 0; // W-Brown 9 pin, Q7 /данные или MISO DataPin 12
+const uint8_t shld_pin = 14; // W-Orange 1 pin, !PL /защелка LoadPin
+const uint8_t clk_pin = 25; // Orange 2 pin, CP /такты или SCK ClockPin
+const uint8_t ce_pin = 26; // W-Blue 15 pin, !CE / чипселект EnablePin
 // const uint8_t led_pin10 = 10; // 
 // const uint8_t led_pin11 = 11; // 
 // const uint8_t led_pin12 = 12; // 
@@ -52,23 +52,35 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 //Socket-------------------------------
 // Create AsyncWebServer object on port 80
-AsyncWebServer server(80);
+// AsyncWebServer server(80);
+AsyncWebServer server(3000);
 AsyncWebSocket ws("/ws");
 
-void notifyClients() {
-  ws.textAll(String(ledState));
-  ws.textAll(String("pinValues: "));
-  ws.textAll(String("pinValues: " + String(pinValues)));
-  // ws.textAll(String(pinValues));
-  Serial.print("notifyClients pinValues: ");
-  Serial.println(pinValues);
-
+String getPinData() {
   String msg_str = "";
   for(byte i=0; i<=DATA_WIDTH-1; i++) 
   { 
     Serial.print(pinValues >> i & 1, BIN); 
     msg_str += pinValues >> i & 1, BIN;
   } 
+  return msg_str;
+};
+
+void notifyClients() {
+  // ws.textAll(String(ledState));
+  // ws.textAll(String("pinValues: "));
+  ws.textAll(String("pinValues: " + String(pinValues)));
+  // ws.textAll(String(pinValues));
+  Serial.print("notifyClients pinValues: ");
+  Serial.println(pinValues);
+
+  // String msg_str = "";
+  // for(byte i=0; i<=DATA_WIDTH-1; i++) 
+  // { 
+  //   Serial.print(pinValues >> i & 1, BIN); 
+  //   msg_str += pinValues >> i & 1, BIN;
+  // } 
+  String msg_str = getPinData();
   ws.textAll(String("pinValues2: " + String(msg_str)));
 }
 
@@ -81,6 +93,11 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       notifyClients();
     }
     if (strcmp((char*)data, "blink") == 0) {
+      // Serial.println("blink");
+      // blink(3, 100);
+      notifyClients();
+    }
+    if (strcmp((char*)data, "getData") == 0) {
       // Serial.println("blink");
       // blink(3, 100);
       notifyClients();
@@ -202,11 +219,12 @@ if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
   pinValues = read_shift_regs();
   print_byte();
   oldPinValues = pinValues;
-
+  
   //Socket setup--------------------------------
   initWebSocket();
   // Start server
   server.begin();
+  notifyClients(); // first messsage
   //Socket setup--------------------------------
   delay(1000);
 }
@@ -267,8 +285,9 @@ void loop() {
       notifyClients();
   }
 
+  print_byte();
   ws.cleanupClients();
-  // delay(1000);
+  delay(1000);
 }
 
 long read_shift_regs()
