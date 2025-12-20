@@ -227,7 +227,9 @@ if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
   digitalWrite(shld_pin, HIGH);
   Serial.println("74hc165 test starts");
 
-  draw_pins("-       -");
+  // const char [10] msg3 = "-       -";
+  char msg3[10] = "-       -";
+  draw_pins(msg3);
   delay(1000);
   pinValues = read_shift_regs();
   print_byte();
@@ -267,7 +269,7 @@ void draw_pins(char *msg) {
   // display.display();
   display.setTextColor(WHITE, BLACK); 
   // display.setCursor(5, 45);
-  char* msg2 = "Pins: ";
+  const char* msg2 = "Pins: ";
   display.println(msg);
   display.display();
   // delay(100);
@@ -349,7 +351,7 @@ void print_byte() {
     display.setCursor(5 + i * 10, 45);
     display.setTextColor(WHITE, BLACK); 
     // display.setCursor(5, 45);
-    char* msg2 = "Pins: ";
+    const char* msg2 = "Pins: ";
     display.println(pinValues >> i & 1, BIN);
     display.println(" ");
     display.display();
