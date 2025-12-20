@@ -56,6 +56,19 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 AsyncWebServer server(3000);
 AsyncWebSocket ws("/ws");
 
+void blink(int qtty, int time) {
+  for (int i=0; i<qtty; i++) {
+    ledState=!ledState;
+    digitalWrite(ledPin, HIGH);
+    delay(time);
+    ledState=!ledState;
+    digitalWrite(ledPin, LOW);
+    delay(time);
+  }
+  digitalWrite(ledPin, !ledState);
+  digitalWrite(ledPin, 0);
+}
+
 String getPinData() {
   String msg_str = "";
   for(byte i=0; i<=DATA_WIDTH-1; i++) 
@@ -283,9 +296,10 @@ void loop() {
       print_byte();
       oldPinValues = pinValues;
       notifyClients();
+      blink(3 , 300);
   }
 
-  print_byte();
+  // print_byte();
   ws.cleanupClients();
   delay(1000);
 }
