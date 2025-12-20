@@ -5,11 +5,21 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
+#include <WiFi.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+
 const uint8_t pin1 = 0; // 
 const uint8_t pin2 = 2; // 
 const uint8_t pin3 = 14; // 
 const uint8_t pin4 = 25; // 
 const uint8_t pin5 = 26; // 
+
+ uint8_t pinState1 = 0; // 
+ uint8_t pinState2 = 0; // 
+ uint8_t pinState3 = 0; // 
+ uint8_t pinState4 = 0; // 
+ uint8_t pinState5 = 0; // 
 
 #define NUMBER_OF_SHIFT_CHIPS   1
 #define DATA_WIDTH   NUMBER_OF_SHIFT_CHIPS * 8
@@ -32,16 +42,21 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 void setup() {
 
 
-  pinMode(pin1, OUTPUT);
-  digitalWrite(pin1, LOW);
-  pinMode(pin2, OUTPUT);
-  digitalWrite(pin2, LOW);
-  pinMode(pin3, OUTPUT);
-  digitalWrite(pin3, LOW);
-  pinMode(pin4, OUTPUT);
-  digitalWrite(pin4, LOW);
-  pinMode(pin5, OUTPUT);
-  digitalWrite(pin5, LOW);
+  // pinMode(pin1, OUTPUT);
+  // digitalWrite(pin1, LOW);
+  // pinMode(pin2, OUTPUT);
+  // digitalWrite(pin2, LOW);
+  // pinMode(pin3, OUTPUT);
+  // digitalWrite(pin3, LOW);
+  // pinMode(pin4, OUTPUT);
+  // digitalWrite(pin4, LOW);
+  // pinMode(pin5, OUTPUT);
+  // digitalWrite(pin5, LOW);
+  pinMode(pin1, INPUT);
+  pinMode(pin2, INPUT);
+  pinMode(pin3, INPUT);
+  pinMode(pin4, INPUT);
+  pinMode(pin5, INPUT);
 
   Wire.begin(5, 4);
   Serial.begin(115200);
@@ -73,17 +88,88 @@ if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
 
 
 void loop() {
-  digitalWrite(pin1, LOW);
-  digitalWrite(pin2, LOW);
-  digitalWrite(pin3, LOW);
-  digitalWrite(pin4, LOW);
-  digitalWrite(pin5, LOW);
-  delay(1000);
+  display.setCursor(5, 41);   
+  display.setTextColor(WHITE, BLACK);   
+  display.print("Pin");  
+  // digitalWrite(pin1, LOW);
+  // digitalWrite(pin2, LOW);
+  // digitalWrite(pin3, LOW);
+  // digitalWrite(pin4, LOW);
+  // digitalWrite(pin5, LOW);
+  // delay(1000);
 
-  digitalWrite(pin1, HIGH);
-  digitalWrite(pin2, HIGH);
-  digitalWrite(pin3, HIGH);
-  digitalWrite(pin4, HIGH);
-  digitalWrite(pin5, HIGH);
-  delay(1000);
+  // digitalWrite(pin1, HIGH);
+  // digitalWrite(pin2, HIGH);
+  // digitalWrite(pin3, HIGH);
+  // digitalWrite(pin4, HIGH);
+  // digitalWrite(pin5, HIGH);
+  // delay(1000);
+
+  pinState1 = digitalRead(pin1);
+  pinState2 = digitalRead(pin2);
+  pinState3 = digitalRead(pin3);
+  pinState4 = digitalRead(pin4);
+  pinState5 = digitalRead(pin5);
+
+  display.setCursor(5, 41);
+  display.print("Pin ");
+  if (pinState1 == 1) {
+    // display.setCursor(5, 41);
+    // display.print("Pin ");
+    display.print(pin1);
+    display.print(" = ");
+    display.print(pinState1);
+  } 
+
+  if (pinState2 == 1) {
+    // display.setCursor(5, 41);
+    // display.print("Pin ");
+    display.print(pin2);
+    display.print(" = ");
+    display.print(pinState2);
+  }
+
+  if (pinState3 == 1) {
+    // display.setCursor(5, 41);
+    // display.print("Pin ");
+    display.print(pin3);
+    display.print(" = ");
+    display.print(pinState3);
+  }
+
+  if (pinState4 == 1) {
+    // display.setCursor(5, 41);
+    // display.print("Pin ");
+    display.print(pin4);
+    display.print(" = ");
+    display.print(pinState4);
+  }
+
+  if (pinState5 == 1) {
+    // display.setCursor(5, 41);
+    // display.print("Pin ");
+    display.print(pin2);
+    display.print(" = ");
+    display.print(pinState2);
+  }
+
+  if (pinState1 + pinState2 + pinState3 + pinState4 + pinState5 == 0) {
+    display.print("all");
+    display.print(" = ");
+    display.print(0);
+  }
+
+  display.setCursor(5, 51);
+  display.print("Pins: ");
+  display.print(pinState1);
+  display.print(" ");
+  display.print(pinState2);
+  display.print(" ");
+  display.print(pinState3);
+  display.print(" ");
+  display.print(pinState4);
+  display.print(" ");
+  display.print(pinState5);
+
+  display.display();
 }

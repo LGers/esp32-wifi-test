@@ -21,10 +21,10 @@ const int   daylightOffset_sec = 3600;
 const char* currentTime;
 const char* oldTime;
 
-const uint8_t data_pin = 0; // W-Brown 9 pin, Q7 /данные или MISO DataPin 12
-const uint8_t shld_pin = 14; // W-Orange 1 pin, !PL /защелка LoadPin
-const uint8_t clk_pin = 25; // Orange 2 pin, CP /такты или SCK ClockPin
-const uint8_t ce_pin = 26; // W-Blue 15 pin, !CE / чипселект EnablePin
+const uint8_t data_pin = 12; // W-Brown 9 pin, Q7 /данные или MISO DataPin 12 /12
+const uint8_t shld_pin = 13; // W-Orange 1 pin, !PL /защелка LoadPin / 13
+const uint8_t clk_pin = 14; // Orange 2 pin, CP /такты или SCK ClockPin / 14
+const uint8_t ce_pin = 15; // W-Blue 15 pin, !CE / чипселект EnablePin / 15
 // const uint8_t led_pin10 = 10; // 
 // const uint8_t led_pin11 = 11; // 
 // const uint8_t led_pin12 = 12; // 
