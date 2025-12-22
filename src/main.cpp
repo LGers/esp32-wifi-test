@@ -17,6 +17,8 @@ void draw_pins(char *msg);
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 3600;
 const int   daylightOffset_sec = 3600;
+unsigned long previousMillis = 0;
+unsigned long currentMillis = 0;
 
 const char* currentTime;
 const char* oldTime;
@@ -80,9 +82,11 @@ String getPinData() {
 };
 
 void notifyClients() {
+  currentMillis = millis();
   // ws.textAll(String(ledState));
   // ws.textAll(String("pinValues: "));
   ws.textAll(String("pinValues: " + String(pinValues)));
+  ws.textAll(String("currentMillis: " + String(currentMillis)));
   // ws.textAll(String(pinValues));
   Serial.print("notifyClients pinValues: ");
   Serial.println(pinValues);
@@ -298,12 +302,12 @@ void loop() {
       print_byte();
       oldPinValues = pinValues;
       notifyClients();
-      blink(3 , 300);
+      //blink(3 , 300);
   }
 
   // print_byte();
   ws.cleanupClients();
-  delay(1000);
+  // delay(1000);
 }
 
 long read_shift_regs()
