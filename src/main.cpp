@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <env.h>
 #include <pins74.h>
+#include <esp_pins.h>
+
 
 #include <WiFi.h>
 #include <Wire.h>
@@ -8,6 +10,7 @@
 #include <Adafruit_SSD1306.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include <ArduinoJson.h>
 
 long read_shift_regs();
 void print_byte();
@@ -32,6 +35,12 @@ const char* oldTime;
 // const uint8_t led_pin10 = 10; // 
 // const uint8_t led_pin11 = 11; // 
 // const uint8_t led_pin12 = 12; // 
+struct SensorData {
+  int id;
+  // float value;
+  String pins;
+  int timeStamp;
+};
 
 bool ledState = 0;
 const int ledPin = 2; //TODO del it
@@ -101,6 +110,52 @@ void notifyClients() {
   // } 
   String msg_str = getPinData();
   ws.textAll(String("pinValues2: " + String(msg_str)));
+  //SensorData data = {1, String(msg_str), currentMillis};
+  // Cast the struct pointer to uint8_t* and get its size
+  // const size_t capacity = JSON_OBJECT_SIZE(3) + 50; // Adjust capacity as needed
+  //JsonDocument doc1;
+  // Add data to the JSON object
+  // doc1["sensor"] = "temperature";
+  // doc1["value"] = 21.5;
+  // doc1["unit"] = String(msg_str);
+  // doc1["millis"] = millis;
+
+  // Serialize the JSON object to a string buffer
+  // char output[100]; // Buffer to hold the serialized string
+  // char output[100] = serializeJson(doc, Serial); // Buffer to hold the serialized string
+  //serializeJson(doc, Serial); // Buffer to hold the serialized string
+  // size_t len = serializeJson(doc, wifiClient);
+  // ws.textAll(output);
+  //ws.sendBIN(clientNum, (uint8_t*)&data, sizeof(data));
+
+
+  // JsonDocument doc; // fixed size
+
+    // JsonObject          root = doc.to<JsonObject>();
+    // root["a"] = "abc";
+    //   // ... etc ...
+
+    // char   buffer[200]; // create temp buffer
+    // size_t len = serializeJson(root, buffer);  // serialize to buffer
+
+    // ws.textAll(buffer, len); // send buffer to web socket
+
+    JsonDocument doc; // Adjust capacity as needed
+
+    // Create key-value pairs in the JSON document
+    doc["sensor"] = "temperature";
+    doc["value"] = 2;
+    doc["status"] = "ok";
+    // doc1["value"] = 21.5;
+    doc["pins"] = String(msg_str);
+    doc["millis"] = currentMillis;
+
+    // Serialize the JSON object into a String
+    char output[256];
+    serializeJson(doc, output);
+
+    // Send the String over the WebSocket to all connected clients
+    ws.textAll("json  : " + String(output));
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
