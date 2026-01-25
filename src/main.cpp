@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <env.h>
 #include <pins74.h>
-#include <esp_pins.h>
+// #include <esp_pins.h>
 
 
 #include <WiFi.h>
@@ -251,6 +251,12 @@ if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     delay(500);
     Serial.print('.');
   }
+
+  do  {
+    delay(500);
+    Serial.print('.');
+  } while  (WiFi.status() != WL_CONNECTED);
+
   Serial.println('\n');
   Serial.println("Connection established");  
   Serial.print("IP address:\t");
