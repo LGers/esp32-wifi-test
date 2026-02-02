@@ -232,24 +232,59 @@ if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
   delay(2000);
   display.clearDisplay();               // Clear display buffer
   display.setTextSize(1.5);             // Set text size
-  display.setTextColor(WHITE);          // Set text color
+  display.setTextColor(WHITE, BLACK);          // Set text color
   display.setCursor(5, 5);              // Define position
   display.println("Hello, Leonid Meow!");     // Display static text
-  display.setCursor(5, 18);      
-  display.print("ssid: ");  
-  display.println(ssid);  
-  display.setCursor(5, 31);      
-  display.print("pass: ");  
-  display.println(password);  
   display.drawRect(0, 0, 128, 43, WHITE);// Draw rectangle
   display.display();                    // Display the text and shape on the screen
 
   delay(1000);
 
+  int attempts = 0;
+
   WiFi.begin(ssid, password);             // Connect to the network
-  while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
+  while (WiFi.status() != WL_CONNECTED && attempts < 6) { // Try for ~3 seconds) { // Wait for the Wi-Fi to connect
+    display.setCursor(5, 18); 
+    display.print("ssid: ");  
+    display.println(ssid);  
+    display.setCursor(5, 31);      
+    display.print("pass: ");  
+    display.println(password);  
+    display.display();
+
     delay(500);
     Serial.print('.');
+    attempts++;
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\nConnected to Network 1!");
+  } else {
+    Serial.println("\nFailed to connect to Network 1. Trying Network 2...");
+    WiFi.disconnect(); // Disconnect before trying a new network
+    
+    display.setCursor(5, 18); 
+    display.print("ssid: ");  
+    display.println(ssid2);  
+    display.setCursor(5, 31);      
+    display.print("pass: ");  
+    display.println(password2);  
+    display.display();
+
+    WiFi.begin(ssid2, password2);
+    attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 6) { // Try for ~3 seconds
+      delay(500);
+      Serial.print(".");
+      attempts++;
+    }
+
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.println("\nConnected to Network 2!");
+    } else {
+      Serial.println("\nFailed to connect to both networks. Stopping.");
+      while(true); // Stop execution
+    }
   }
 
   do  {
