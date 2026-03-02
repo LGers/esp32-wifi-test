@@ -241,6 +241,7 @@ void setup()
 
   Wire.begin(5, 4);
   Serial.begin(115200);
+  blink(1, 200);
   if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS))
   {
     Serial.println(F("SSD1306 allocation failed"));
@@ -251,7 +252,7 @@ void setup()
   {
     Serial.println(F("SSD1306 allocation GOOD"));
   }
-  delay(2000);
+  blink(2 , 400); //delay(2000);
   display.clearDisplay();                 // Clear display buffer
   display.setTextSize(1.5);               // Set text size
   display.setTextColor(WHITE, BLACK);     // Set text color
@@ -260,7 +261,7 @@ void setup()
   display.drawRect(0, 0, 128, 43, WHITE); // Draw rectangle
   display.display();                      // Display the text and shape on the screen
 
-  delay(1000);
+  blink(3 , 400); // delay(1000);
 
   // START Led test
   reg.clearAll();
@@ -282,7 +283,8 @@ void setup()
   delay(1000);
 
   reg.clearAll();
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 8; i++)
+  {
     reg.clearAll();
     reg.write(i, 1);
     reg.update();
@@ -306,7 +308,7 @@ void setup()
     display.println(password);
     display.display();
 
-    delay(500);
+    blink(2 , 250); //delay(500);
     Serial.print('.');
     attempts++;
   }
@@ -555,7 +557,8 @@ void print_leds()
   reg.update();
 }
 
-void blink_led(int id, int times, int blink_delay) {
+void blink_led(int id, int times, int blink_delay)
+{
   byte i;
 
   reg.write(id, 0);
