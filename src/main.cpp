@@ -18,6 +18,7 @@ void print_byte();
 void print_leds();
 void blink_led(int id, int times, int blink_delay);
 void draw_pins(char *msg);
+long get_changed_pin_number(long pinValues, long oldPinValues);
 // const char* ssid     = "ssid";
 // const char* password = "password";
 
@@ -252,7 +253,7 @@ void setup()
   {
     Serial.println(F("SSD1306 allocation GOOD"));
   }
-  blink(2 , 400); //delay(2000);
+  blink(2, 400);                          // delay(2000);
   display.clearDisplay();                 // Clear display buffer
   display.setTextSize(1.5);               // Set text size
   display.setTextColor(WHITE, BLACK);     // Set text color
@@ -261,7 +262,7 @@ void setup()
   display.drawRect(0, 0, 128, 43, WHITE); // Draw rectangle
   display.display();                      // Display the text and shape on the screen
 
-  blink(3 , 400); // delay(1000);
+  blink(3, 400); // delay(1000);
 
   // START Led test
   reg.clearAll();
@@ -308,7 +309,7 @@ void setup()
     display.println(password);
     display.display();
 
-    blink(2 , 250); //delay(500);
+    blink(2, 250); // delay(500);
     Serial.print('.');
     attempts++;
   }
@@ -464,9 +465,14 @@ void loop()
 
   if (pinValues != oldPinValues)
   {
+    long changedPinNumber = get_changed_pin_number(pinValues, oldPinValues);
     print_byte();
+    if (changedPinNumber >= 0)
+    {
+      blink_led(changedPinNumber, 3, 200);
+    }
     print_leds();
-    blink_led(7, 3, 200);
+    blink_led(7, 3, 50);
     oldPinValues = pinValues;
     notifyClients();
     blink(1, 300);
@@ -576,4 +582,19 @@ void blink_led(int id, int times, int blink_delay)
     reg.update();
     delay(blink_delay);
   }
+};
+
+long get_changed_pin_number(long pinValues, long oldPinValues)
+{
+  long changedPinValues = pinValues ^ oldPinValues;
+  byte idx = 0;
+
+  for (byte idx = 0; idx <= DATA_WIDTH - 1; idx++)
+  {
+    if (changedPinValues >> idx & 1)
+    {
+      return idx;
+    }
+  }
+  return -1;
 };
