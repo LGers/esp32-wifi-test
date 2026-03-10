@@ -469,7 +469,7 @@ void loop()
     print_byte();
     if (changedPinNumber >= 0)
     {
-      blink_led(changedPinNumber, 3, 200);
+      blink_led(changedPinNumber, 3, 100);
     }
     print_leds();
     blink_led(7, 3, 50);
