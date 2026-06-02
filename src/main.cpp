@@ -382,7 +382,7 @@ void setup()
 
   // 74hc165 shift register
   pinMode(shld_pin, OUTPUT); // LoadPin
-  pinMode(ce_pin, OUTPUT);   // EnablePin
+  // pinMode(ce_pin, OUTPUT);   // EnablePin
   pinMode(clk_pin, OUTPUT);  // ClockPin
   pinMode(data_pin, INPUT);  // DataPin
 
@@ -488,11 +488,11 @@ long read_shift_regs()
   long bitVal;
   unsigned long bytesVal = 0;
 
-  digitalWrite(ce_pin, HIGH);  // EnablePin
+  // digitalWrite(ce_pin, HIGH);  // EnablePin
   digitalWrite(shld_pin, LOW); // LoadPin
   delayMicroseconds(5);
   digitalWrite(shld_pin, HIGH); // LoadPin
-  digitalWrite(ce_pin, LOW);    // EnablePin
+  // digitalWrite(ce_pin, LOW);    // EnablePin
 
   for (int i = 0; i < DATA_WIDTH; i++)
   {
