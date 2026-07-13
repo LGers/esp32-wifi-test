@@ -478,6 +478,7 @@ void draw_pins(char *msg)
 
 void loop()
 {
+  leds.loop();
   struct tm timeinfo;
   oldTime = "";
   // if (getLocalTime(&timeinfo)) {
@@ -588,7 +589,14 @@ void print_leds()
   for (byte i = 0; i <= DATA_WIDTH - 1; i++)
   {
     // reg.write(i, pinValues >> i & 1);
+    if (pinValues >> i & 1) {
+      leds.on(i);
+    }
+    else {
+      leds.off(i);
+    }
   }
+  leds.loop();
   // reg.update();
 }
 
@@ -599,16 +607,23 @@ void blink_led(int id, int times, int blink_delay)
   // reg.write(id, 0);
   // reg.update();
 
+  leds.off(id);
+  leds.loop();
+
   delay(blink_delay);
 
   for (byte i = 0; i < times; i++)
   {
     // reg.write(id, 1);
     // reg.update();
+    leds.on(id);
+    leds.loop();
     delay(blink_delay);
-
+    
     // reg.write(id, 0);
     // reg.update();
+    leds.off(id);
+    leds.loop();
     delay(blink_delay);
   }
 };
