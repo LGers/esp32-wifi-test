@@ -77,34 +77,34 @@ void zalcLED::offAll()
 
 void zalcLED::on(int ledNumber)
 {
-    onBit(ledNumber - 1);
-    ledsState2[ledNumber - 1].isLedOn = true;
-    ledsState2[ledNumber - 1].mode = LED_MODE_ON_OFF;
+    onBit(ledNumber);
+    ledsState2[ledNumber].isLedOn = true;
+    ledsState2[ledNumber].mode = LED_MODE_ON_OFF;
 };
 
 void zalcLED::off(int ledNumber)
 {
-    offBit(ledNumber - 1);
-    ledsState2[ledNumber - 1].isLedOn = false;
-    ledsState2[ledNumber - 1].mode = LED_MODE_ON_OFF;
+    offBit(ledNumber);
+    ledsState2[ledNumber].isLedOn = false;
+    ledsState2[ledNumber].mode = LED_MODE_ON_OFF;
 };
 
 void zalcLED::blink1(int ledNumber)
 {
-    ledsState2[ledNumber - 1].mode = LED_MODE_BLINK_FOREVER;
+    ledsState2[ledNumber].mode = LED_MODE_BLINK_FOREVER;
 };
 
 void zalcLED::blink1(int ledNumber, uint16_t ledBlinkDelay)
 {
-    ledsState2[ledNumber - 1].mode = LED_MODE_BLINK_FOREVER;
-    ledsState2[ledNumber - 1].blinkTimePeriod = ledBlinkDelay;
+    ledsState2[ledNumber].mode = LED_MODE_BLINK_FOREVER;
+    ledsState2[ledNumber].blinkTimePeriod = ledBlinkDelay;
 };
 
 void zalcLED::blinkTimes(int ledNumber, uint16_t ledBlinkDelay, uint8_t times)
 {
-    ledsState2[ledNumber - 1].mode = LED_MODE_BLINK_NUM_TIME;
-    ledsState2[ledNumber - 1].blinkTimePeriod = ledBlinkDelay;
-    ledsState2[ledNumber - 1].blinkNumberOfTimes = times;
+    ledsState2[ledNumber].mode = LED_MODE_BLINK_NUM_TIME;
+    ledsState2[ledNumber].blinkTimePeriod = ledBlinkDelay;
+    ledsState2[ledNumber].blinkNumberOfTimes = times;
 };
 
 void zalcLED::toggle() {
@@ -113,7 +113,7 @@ void zalcLED::toggle() {
 
 unsigned int zalcLED::getPinState(int pinNumber)
 {
-    return ledsState2[pinNumber - 1].isLedOn;
+    return ledsState2[pinNumber].isLedOn;
 };
 
 // LOOP----------------------------------

@@ -12,13 +12,13 @@
 #include <ArduinoJson.h>
 #include <zalcLED.h>
 #include <GyverShift.h>
-GyverShift<OUTPUT, 1> reg(CS_595, DAT_595, CLK_595);
+// GyverShift<OUTPUT, 1> reg(CS_595, DAT_595, CLK_595);
 
 zalcLED leds;
 
-#define dataPin 6  // пин подключен к входу DS
-#define latchPin 5 // пин подключен к входу ST_CP
-#define clockPin 4 // пин подключен к входу SH_CP
+#define dataPin 16 // 6  // пин подключен к входу DS  // DAT_595
+#define latchPin 0 // 5 // пин подключен к входу ST_CP // CS_595
+#define clockPin 2 // 4 // пин подключен к входу SH_CP // CLK_595
 
 long read_shift_regs();
 void print_byte();
@@ -247,12 +247,17 @@ void setup()
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, LOW);
 
+  // #define dataPin 6  // пин подключен к входу DS
+  // #define latchPin 5 // пин подключен к входу ST_CP
+  // #define clockPin 4 // пин подключен к входу SH_CP
+  //           6        5          4
+  //           16        0         2
   leds.init(dataPin, latchPin, clockPin);
-  
+
   Wire.begin(5, 4);
   Serial.begin(115200);
   blink(1, 200);
-  
+
   if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS))
   {
     Serial.println(F("SSD1306 allocation failed"));
@@ -263,7 +268,7 @@ void setup()
   {
     Serial.println(F("SSD1306 allocation GOOD"));
   }
-  
+
   blink(2, 400);                          // delay(2000);
   display.clearDisplay();                 // Clear display buffer
   display.setTextSize(1.5);               // Set text size
@@ -273,37 +278,50 @@ void setup()
   display.drawRect(0, 0, 128, 43, WHITE); // Draw rectangle
   display.display();                      // Display the text and shape on the screen
 
-  blink(3, 400); // delay(1000);
+  // blink(3, 400); // delay(1000);
 
   // START Led test
-  reg.clearAll();
-  reg.update();
+  // reg.clearAll();
+  // reg.update();
 
-  reg.write(0, 1);
-  reg.write(1, 1);
-  reg.write(2, 1);
-  reg.write(3, 1);
-  reg.write(4, 1);
-  reg.write(5, 1);
-  reg.write(6, 1);
-  reg.write(7, 1);
-  reg.update();
+  // reg.write(0, 1);
+  // reg.write(1, 1);
+  // reg.write(2, 1);
+  // reg.write(3, 1);
+  // reg.write(4, 1);
+  // reg.write(5, 1);
+  // reg.write(6, 1);
+  // reg.write(7, 1);
+  // reg.update();
+  // delay(1000);
+
+  // reg.clearAll();
+  // reg.update();
+  // delay(1000);
+  // reg.clearAll();
+
+  // leds.onAll();
+  leds.loop();
+
   delay(1000);
+  // leds.offAll();
+  leds.loop();
 
-  reg.clearAll();
-  reg.update();
-  delay(1000);
-
-  reg.clearAll();
   for (int i = 0; i < 8; i++)
   {
-    reg.clearAll();
-    reg.write(i, 1);
-    reg.update();
+    // reg.clearAll();
+    // reg.write(i, 1);
+    // reg.update();
+    
+    leds.on(i);
+    leds.loop();
     delay(200);
+    
+    leds.off(i);
+    leds.loop();
   }
-  reg.clearAll();
-  reg.update();
+  // reg.clearAll();
+  // reg.update();
 
   // END Led test
 
@@ -394,8 +412,8 @@ void setup()
   // 74hc165 shift register
   pinMode(shld_pin, OUTPUT); // LoadPin
   // pinMode(ce_pin, OUTPUT);   // EnablePin
-  pinMode(clk_pin, OUTPUT);  // ClockPin
-  pinMode(data_pin, INPUT);  // DataPin
+  pinMode(clk_pin, OUTPUT); // ClockPin
+  pinMode(data_pin, INPUT); // DataPin
 
   // pinMode(led_pin10, OUTPUT);//
   // pinMode(led_pin11, OUTPUT);//
@@ -569,28 +587,28 @@ void print_leds()
 
   for (byte i = 0; i <= DATA_WIDTH - 1; i++)
   {
-    reg.write(i, pinValues >> i & 1);
+    // reg.write(i, pinValues >> i & 1);
   }
-  reg.update();
+  // reg.update();
 }
 
 void blink_led(int id, int times, int blink_delay)
 {
   byte i;
 
-  reg.write(id, 0);
-  reg.update();
+  // reg.write(id, 0);
+  // reg.update();
 
   delay(blink_delay);
 
   for (byte i = 0; i < times; i++)
   {
-    reg.write(id, 1);
-    reg.update();
+    // reg.write(id, 1);
+    // reg.update();
     delay(blink_delay);
 
-    reg.write(id, 0);
-    reg.update();
+    // reg.write(id, 0);
+    // reg.update();
     delay(blink_delay);
   }
 };
