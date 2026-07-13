@@ -10,22 +10,14 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
-#include <zalcLED.h>
 #include <GyverShift.h>
 GyverShift<OUTPUT, 1> reg(CS_595, DAT_595, CLK_595);
-
-zalcLED leds;
-
-#define dataPin 6  // пин подключен к входу DS
-#define latchPin 5 // пин подключен к входу ST_CP
-#define clockPin 4 // пин подключен к входу SH_CP
 
 long read_shift_regs();
 void print_byte();
 void print_leds();
 void blink_led(int id, int times, int blink_delay);
 void draw_pins(char *msg);
-long get_changed_pin_number(long pinValues, long oldPinValues);
 // const char* ssid     = "ssid";
 // const char* password = "password";
 
@@ -247,12 +239,8 @@ void setup()
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, LOW);
 
-  leds.init(dataPin, latchPin, clockPin);
-  
   Wire.begin(5, 4);
   Serial.begin(115200);
-  blink(1, 200);
-  
   if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS))
   {
     Serial.println(F("SSD1306 allocation failed"));
@@ -263,8 +251,7 @@ void setup()
   {
     Serial.println(F("SSD1306 allocation GOOD"));
   }
-  
-  blink(2, 400);                          // delay(2000);
+  delay(2000);
   display.clearDisplay();                 // Clear display buffer
   display.setTextSize(1.5);               // Set text size
   display.setTextColor(WHITE, BLACK);     // Set text color
@@ -273,7 +260,7 @@ void setup()
   display.drawRect(0, 0, 128, 43, WHITE); // Draw rectangle
   display.display();                      // Display the text and shape on the screen
 
-  blink(3, 400); // delay(1000);
+  delay(1000);
 
   // START Led test
   reg.clearAll();
@@ -295,8 +282,7 @@ void setup()
   delay(1000);
 
   reg.clearAll();
-  for (int i = 0; i < 8; i++)
-  {
+  for (int i = 0; i < 8; i++) {
     reg.clearAll();
     reg.write(i, 1);
     reg.update();
@@ -320,7 +306,7 @@ void setup()
     display.println(password);
     display.display();
 
-    blink(2, 250); // delay(500);
+    delay(500);
     Serial.print('.');
     attempts++;
   }
@@ -476,14 +462,9 @@ void loop()
 
   if (pinValues != oldPinValues)
   {
-    long changedPinNumber = get_changed_pin_number(pinValues, oldPinValues);
     print_byte();
-    if (changedPinNumber >= 0)
-    {
-      blink_led(changedPinNumber, 3, 100);
-    }
     print_leds();
-    blink_led(7, 3, 50);
+    blink_led(7, 3, 200);
     oldPinValues = pinValues;
     notifyClients();
     blink(1, 300);
@@ -574,8 +555,7 @@ void print_leds()
   reg.update();
 }
 
-void blink_led(int id, int times, int blink_delay)
-{
+void blink_led(int id, int times, int blink_delay) {
   byte i;
 
   reg.write(id, 0);
@@ -593,19 +573,4 @@ void blink_led(int id, int times, int blink_delay)
     reg.update();
     delay(blink_delay);
   }
-};
-
-long get_changed_pin_number(long pinValues, long oldPinValues)
-{
-  long changedPinValues = pinValues ^ oldPinValues;
-  byte idx = 0;
-
-  for (byte idx = 0; idx <= DATA_WIDTH - 1; idx++)
-  {
-    if (changedPinValues >> idx & 1)
-    {
-      return idx;
-    }
-  }
-  return -1;
 };
