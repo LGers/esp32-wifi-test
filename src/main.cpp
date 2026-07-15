@@ -11,20 +11,22 @@
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include <zalcLED.h>
+#include <Oled096.h>
 #include <GyverShift.h>
 // GyverShift<OUTPUT, 1> reg(CS_595, DAT_595, CLK_595);
 
 zalcLED leds;
+Oled096 oled096;
 
 #define dataPin 16 // 6  // пин подключен к входу DS  // DAT_595
 #define latchPin 0 // 5 // пин подключен к входу ST_CP // CS_595
 #define clockPin 2 // 4 // пин подключен к входу SH_CP // CLK_595
 
 long read_shift_regs();
-void print_byte();
+// void _print_byte();
 void print_leds();
 void blink_led(int id, int times, int blink_delay);
-void draw_pins(char *msg);
+// void draw_pins(char *msg);
 long get_changed_pin_number(long pinValues, long oldPinValues);
 // const char* ssid     = "ssid";
 // const char* password = "password";
@@ -63,16 +65,16 @@ const int ledPin = 2; // TODO del it
 unsigned long pinValues;
 unsigned long oldPinValues;
 
-#define SCREEN_WIDTH 128    // OLED display width, in pixels
-#define SCREEN_HEIGHT 64    // OLED display height, in pixels
-#define SCREEN_ADDRESS 0x3C // Address 0x3D for 128x64
+// #define SCREEN_WIDTH 128    // OLED display width, in pixels
+// #define SCREEN_HEIGHT 64    // OLED display height, in pixels
+// #define SCREEN_ADDRESS 0x3C // Address 0x3D for 128x64
 
 // OLED Display 128x64
 // SSD1306Wire  display(0x3c, 5, 4);
 
 // #define ssid
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+// Adafruit_SSD1306 display1(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 // Socket-------------------------------
 //  Create AsyncWebServer object on port 80
@@ -258,26 +260,27 @@ void setup()
   Serial.begin(115200);
   blink(1, 200);
 
-  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS))
-  {
-    Serial.println(F("SSD1306 allocation failed"));
-    for (;;)
-      ;
-  }
-  else
-  {
-    Serial.println(F("SSD1306 allocation GOOD"));
-  }
+  // if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS))
+  // {
+  //   Serial.println(F("SSD1306 allocation failed"));
+  //   for (;;)
+  //     ;
+  // }
+  // else
+  // {
+  //   Serial.println(F("SSD1306 allocation GOOD"));
+  // }
 
-  blink(2, 400);                          // delay(2000);
-  display.clearDisplay();                 // Clear display buffer
-  display.setTextSize(1.5);               // Set text size
-  display.setTextColor(WHITE, BLACK);     // Set text color
-  display.setCursor(5, 5);                // Define position
-  display.println("Hello, Leonid Meow!"); // Display static text
-  display.drawRect(0, 0, 128, 43, WHITE); // Draw rectangle
-  display.display();                      // Display the text and shape on the screen
+  // blink(2, 400);                          // delay(2000);
+  // display.clearDisplay();                 // Clear display buffer
+  // display.setTextSize(1.5);               // Set text size
+  // display.setTextColor(WHITE, BLACK);     // Set text color
+  // display.setCursor(5, 5);                // Define position
+  // display.println("Hello, Leonid Meow!"); // Display static text
+  // display.drawRect(0, 0, 128, 43, WHITE); // Draw rectangle
+  // display.display();                      // Display the text and shape on the screen
 
+  oled096.init(5, 4);
   // blink(3, 400); // delay(1000);
 
   // START Led test
@@ -312,11 +315,11 @@ void setup()
     // reg.clearAll();
     // reg.write(i, 1);
     // reg.update();
-    
+
     leds.on(i);
     leds.loop();
     delay(200);
-    
+
     leds.off(i);
     leds.loop();
   }
@@ -330,13 +333,16 @@ void setup()
   WiFi.begin(ssid, password); // Connect to the network
   while (WiFi.status() != WL_CONNECTED && attempts < 6)
   { // Try for ~3 seconds) { // Wait for the Wi-Fi to connect
-    display.setCursor(5, 18);
-    display.print("ssid: ");
-    display.println(ssid);
-    display.setCursor(5, 31);
-    display.print("pass: ");
-    display.println(password);
-    display.display();
+    // printWiFi() Start
+    oled096.printWiFi(ssid, password);
+    // display.setCursor(5, 18);
+    // display.print("ssid: ");
+    // display.println(ssid);
+    // display.setCursor(5, 31);
+    // display.print("pass: ");
+    // display.println(password);
+    // display.display();
+    // printWiFi() End
 
     blink(2, 250); // delay(500);
     Serial.print('.');
@@ -352,13 +358,14 @@ void setup()
     Serial.println("\nFailed to connect to Network 1. Trying Network 2...");
     WiFi.disconnect(); // Disconnect before trying a new network
 
-    display.setCursor(5, 18);
-    display.print("ssid: ");
-    display.println(ssid2);
-    display.setCursor(5, 31);
-    display.print("pass: ");
-    display.println(password2);
-    display.display();
+    oled096.printWiFi(ssid2, password2);
+    // display.setCursor(5, 18);
+    // display.print("ssid: ");
+    // display.println(ssid2);
+    // display.setCursor(5, 31);
+    // display.print("pass: ");
+    // display.println(password2);
+    // display.display();
 
     WiFi.begin(ssid2, password2);
     attempts = 0;
@@ -395,19 +402,21 @@ void setup()
   // Get the NTP time
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
-  // display.init();
-  display.clearDisplay();
-  // display.setTextAlignment(TEXT_ALIGN_LEFT);
-  // display.setFont(ArialMT_Plain_10);
-  display.setCursor(5, 5);
-  display.println("Acc Point connected");
-  display.setCursor(5, 18);
-  display.println("AP IP address: ");
-  display.setCursor(5, 28);
-  display.println(WiFi.localIP().toString());
-  display.setCursor(5, 38);
-  display.setCursor(5, 48);
-  display.display();
+  // // display.init();
+  // display.clearDisplay();
+  // // display.setTextAlignment(TEXT_ALIGN_LEFT);
+  // // display.setFont(ArialMT_Plain_10);
+  // display.setCursor(5, 5);
+  // display.println("Acc Point connected");
+  // display.setCursor(5, 18);
+  // display.println("AP IP address: ");
+  // display.setCursor(5, 28);
+  // display.println(WiFi.localIP().toString());
+  // display.setCursor(5, 38);
+  // display.setCursor(5, 48);
+  // display.display();
+
+  oled096.printWiFiStatus(WiFi.localIP().toString());
 
   // 74hc165 shift register
   pinMode(shld_pin, OUTPUT); // LoadPin
@@ -426,10 +435,12 @@ void setup()
 
   // const char [10] msg3 = "-       -";
   char msg3[10] = "-       -";
-  draw_pins(msg3);
+  // draw_pins(msg3);
+  oled096.drawPins(msg3);
   delay(1000);
   pinValues = read_shift_regs();
-  print_byte();
+  // print_byte();
+  oled096.printByte(pinValues, DATA_WIDTH);
   oldPinValues = pinValues;
 
   // Socket setup--------------------------------
@@ -441,40 +452,41 @@ void setup()
   delay(1000);
 }
 
-void draw_time(char *msg)
-{
-  display.setCursor(5, 55);
-  // display.setTextAlignment(TEXT_ALIGN_CENTER);
-  // display.setFont(ArialMT_Plain_24);
-  // display.setTextColor(WHITE, BLACK);
-  // display.println("            ");
-  // display.display();
-  display.setTextColor(WHITE, BLACK);
-  display.setCursor(5, 55);
-  display.println(msg);
-  display.display();
-  // delay(100);
+// void draw_time(char *msg)
+// {
+//   display.setCursor(5, 55);
+//   // display.setTextAlignment(TEXT_ALIGN_CENTER);
+//   // display.setFont(ArialMT_Plain_24);
+//   // display.setTextColor(WHITE, BLACK);
+//   // display.println("            ");
+//   // display.display();
+//   display.setTextColor(WHITE, BLACK);
+//   display.setCursor(5, 55);
+//   display.println(msg);
+//   display.display();
+//   // delay(100);
 
-  Serial.println(msg);
-}
+//   Serial.println(msg);
+// }
 
-void draw_pins(char *msg)
-{
-  display.setCursor(5, 45);
-  // display.setTextAlignment(TEXT_ALIGN_CENTER);
-  // display.setFont(ArialMT_Plain_24);
-  // display.setTextColor(WHITE, BLACK);
-  // display.println("            ");
-  // display.display();
-  display.setTextColor(WHITE, BLACK);
-  // display.setCursor(5, 45);
-  const char *msg2 = "Pins: ";
-  display.println(msg);
-  display.display();
-  // delay(100);
+// TODO: del it
+//  void draw_pins(char *msg)
+//  {
+//    display.setCursor(5, 45);
+//    // display.setTextAlignment(TEXT_ALIGN_CENTER);
+//    // display.setFont(ArialMT_Plain_24);
+//    // display.setTextColor(WHITE, BLACK);
+//    // display.println("            ");
+//    // display.display();
+//    display.setTextColor(WHITE, BLACK);
+//    // display.setCursor(5, 45);
+//    const char *msg2 = "Pins: ";
+//    display.println(msg);
+//    display.display();
+//    // delay(100);
 
-  Serial.println(msg);
-}
+//   Serial.println(msg);
+// }
 
 void loop()
 {
@@ -496,7 +508,8 @@ void loop()
   if (pinValues != oldPinValues)
   {
     long changedPinNumber = get_changed_pin_number(pinValues, oldPinValues);
-    print_byte();
+    // print_byte();
+    oled096.printByte(pinValues, DATA_WIDTH);
     if (changedPinNumber >= 0)
     {
       blink_led(changedPinNumber, 3, 100);
@@ -537,50 +550,51 @@ long read_shift_regs()
   return (bytesVal);
 }
 
-void print_byte()
-{
-  byte i;
+// TODO: del it
+//  void _print_byte()
+//  {
+//    byte i;
 
-  Serial.println("*Shift Register Values:*\r\n");
+//   Serial.println("*Shift Register Values:*\r\n");
 
-  for (byte i = 0; i <= DATA_WIDTH - 1; i++)
-  {
-    Serial.print("P");
-    Serial.print(i + 1);
-    Serial.print(" ");
-  }
-  Serial.println();
-  for (byte i = 0; i <= DATA_WIDTH - 1; i++)
-  {
-    Serial.print(pinValues >> i & 1, BIN);
+//   for (byte i = 0; i <= DATA_WIDTH - 1; i++)
+//   {
+//     Serial.print("P");
+//     Serial.print(i + 1);
+//     Serial.print(" ");
+//   }
+//   Serial.println();
+//   for (byte i = 0; i <= DATA_WIDTH - 1; i++)
+//   {
+//     Serial.print(pinValues >> i & 1, BIN);
 
-    if (i > 8)
-    {
-      Serial.print(" ");
-    }
-    Serial.print("  ");
-    display.setCursor(5 + i * 10, 45);
-    display.setTextColor(WHITE, BLACK);
-    // display.setCursor(5, 45);
-    const char *msg2 = "Pins: ";
-    display.println(pinValues >> i & 1, BIN);
-    display.println(" ");
-    display.display();
-  }
+//     if (i > 8)
+//     {
+//       Serial.print(" ");
+//     }
+//     Serial.print("  ");
+//     display.setCursor(5 + i * 10, 45);
+//     display.setTextColor(WHITE, BLACK);
+//     // display.setCursor(5, 45);
+//     const char *msg2 = "Pins: ";
+//     display.println(pinValues >> i & 1, BIN);
+//     display.println(" ");
+//     display.display();
+//   }
 
-  Serial.println("pinValues");
-  Serial.print("Pin1:  ");
-  Serial.println(pinValues >> 0 & 1);
-  // sw_led(led_pin10, pinValues >> 0 & 1);
-  Serial.print("Pin2:  ");
-  Serial.println(pinValues >> 1 & 1);
-  // sw_led(led_pin11, pinValues >> 1 & 1);
-  Serial.print("Pin3:  ");
-  Serial.println(pinValues >> 2 & 1);
-  // sw_led(led_pin12, pinValues >> 2 & 1);
-  char *c = (char *)pinValues;
-  // draw_pins(c);
-}
+//   Serial.println("pinValues");
+//   Serial.print("Pin1:  ");
+//   Serial.println(pinValues >> 0 & 1);
+//   // sw_led(led_pin10, pinValues >> 0 & 1);
+//   Serial.print("Pin2:  ");
+//   Serial.println(pinValues >> 1 & 1);
+//   // sw_led(led_pin11, pinValues >> 1 & 1);
+//   Serial.print("Pin3:  ");
+//   Serial.println(pinValues >> 2 & 1);
+//   // sw_led(led_pin12, pinValues >> 2 & 1);
+//   char *c = (char *)pinValues;
+//   // draw_pins(c);
+// }
 
 void print_leds()
 {
@@ -589,10 +603,12 @@ void print_leds()
   for (byte i = 0; i <= DATA_WIDTH - 1; i++)
   {
     // reg.write(i, pinValues >> i & 1);
-    if (pinValues >> i & 1) {
+    if (pinValues >> i & 1)
+    {
       leds.on(i);
     }
-    else {
+    else
+    {
       leds.off(i);
     }
   }
@@ -619,7 +635,7 @@ void blink_led(int id, int times, int blink_delay)
     leds.on(id);
     leds.loop();
     delay(blink_delay);
-    
+
     // reg.write(id, 0);
     // reg.update();
     leds.off(id);
