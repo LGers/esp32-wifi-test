@@ -12,8 +12,6 @@
 #include <ArduinoJson.h>
 #include <zalcLED.h>
 #include <Oled096.h>
-#include <GyverShift.h>
-// GyverShift<OUTPUT, 1> reg(CS_595, DAT_595, CLK_595);
 
 zalcLED leds;
 Oled096 oled096;
@@ -23,13 +21,9 @@ Oled096 oled096;
 #define clockPin 2 // 4 // пин подключен к входу SH_CP // CLK_595
 
 long read_shift_regs();
-// void _print_byte();
 void print_leds();
 void blink_led(int id, int times, int blink_delay);
-// void draw_pins(char *msg);
 long get_changed_pin_number(long pinValues, long oldPinValues);
-// const char* ssid     = "ssid";
-// const char* password = "password";
 
 const char *ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 3600;
@@ -64,17 +58,6 @@ const int ledPin = 2; // TODO del it
 
 unsigned long pinValues;
 unsigned long oldPinValues;
-
-// #define SCREEN_WIDTH 128    // OLED display width, in pixels
-// #define SCREEN_HEIGHT 64    // OLED display height, in pixels
-// #define SCREEN_ADDRESS 0x3C // Address 0x3D for 128x64
-
-// OLED Display 128x64
-// SSD1306Wire  display(0x3c, 5, 4);
-
-// #define ssid
-// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
-// Adafruit_SSD1306 display1(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 // Socket-------------------------------
 //  Create AsyncWebServer object on port 80
@@ -260,61 +243,14 @@ void setup()
   Serial.begin(115200);
   blink(1, 200);
 
-  // if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS))
-  // {
-  //   Serial.println(F("SSD1306 allocation failed"));
-  //   for (;;)
-  //     ;
-  // }
-  // else
-  // {
-  //   Serial.println(F("SSD1306 allocation GOOD"));
-  // }
-
-  // blink(2, 400);                          // delay(2000);
-  // display.clearDisplay();                 // Clear display buffer
-  // display.setTextSize(1.5);               // Set text size
-  // display.setTextColor(WHITE, BLACK);     // Set text color
-  // display.setCursor(5, 5);                // Define position
-  // display.println("Hello, Leonid Meow!"); // Display static text
-  // display.drawRect(0, 0, 128, 43, WHITE); // Draw rectangle
-  // display.display();                      // Display the text and shape on the screen
-
   oled096.init(5, 4);
-  // blink(3, 400); // delay(1000);
-
-  // START Led test
-  // reg.clearAll();
-  // reg.update();
-
-  // reg.write(0, 1);
-  // reg.write(1, 1);
-  // reg.write(2, 1);
-  // reg.write(3, 1);
-  // reg.write(4, 1);
-  // reg.write(5, 1);
-  // reg.write(6, 1);
-  // reg.write(7, 1);
-  // reg.update();
-  // delay(1000);
-
-  // reg.clearAll();
-  // reg.update();
-  // delay(1000);
-  // reg.clearAll();
-
-  // leds.onAll();
   leds.loop();
 
   delay(1000);
-  // leds.offAll();
   leds.loop();
 
   for (int i = 0; i < 8; i++)
   {
-    // reg.clearAll();
-    // reg.write(i, 1);
-    // reg.update();
 
     leds.on(i);
     leds.loop();
@@ -323,9 +259,6 @@ void setup()
     leds.off(i);
     leds.loop();
   }
-  // reg.clearAll();
-  // reg.update();
-
   // END Led test
 
   int attempts = 0;
@@ -333,16 +266,7 @@ void setup()
   WiFi.begin(ssid, password); // Connect to the network
   while (WiFi.status() != WL_CONNECTED && attempts < 6)
   { // Try for ~3 seconds) { // Wait for the Wi-Fi to connect
-    // printWiFi() Start
     oled096.printWiFi(ssid, password);
-    // display.setCursor(5, 18);
-    // display.print("ssid: ");
-    // display.println(ssid);
-    // display.setCursor(5, 31);
-    // display.print("pass: ");
-    // display.println(password);
-    // display.display();
-    // printWiFi() End
 
     blink(2, 250); // delay(500);
     Serial.print('.');
@@ -359,13 +283,6 @@ void setup()
     WiFi.disconnect(); // Disconnect before trying a new network
 
     oled096.printWiFi(ssid2, password2);
-    // display.setCursor(5, 18);
-    // display.print("ssid: ");
-    // display.println(ssid2);
-    // display.setCursor(5, 31);
-    // display.print("pass: ");
-    // display.println(password2);
-    // display.display();
 
     WiFi.begin(ssid2, password2);
     attempts = 0;
@@ -402,20 +319,6 @@ void setup()
   // Get the NTP time
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
-  // // display.init();
-  // display.clearDisplay();
-  // // display.setTextAlignment(TEXT_ALIGN_LEFT);
-  // // display.setFont(ArialMT_Plain_10);
-  // display.setCursor(5, 5);
-  // display.println("Acc Point connected");
-  // display.setCursor(5, 18);
-  // display.println("AP IP address: ");
-  // display.setCursor(5, 28);
-  // display.println(WiFi.localIP().toString());
-  // display.setCursor(5, 38);
-  // display.setCursor(5, 48);
-  // display.display();
-
   oled096.printWiFiStatus(WiFi.localIP().toString());
 
   // 74hc165 shift register
@@ -435,11 +338,10 @@ void setup()
 
   // const char [10] msg3 = "-       -";
   char msg3[10] = "-       -";
-  // draw_pins(msg3);
   oled096.drawPins(msg3);
   delay(1000);
   pinValues = read_shift_regs();
-  // print_byte();
+
   oled096.printByte(pinValues, DATA_WIDTH);
   oldPinValues = pinValues;
 
@@ -452,68 +354,24 @@ void setup()
   delay(1000);
 }
 
-// void draw_time(char *msg)
-// {
-//   display.setCursor(5, 55);
-//   // display.setTextAlignment(TEXT_ALIGN_CENTER);
-//   // display.setFont(ArialMT_Plain_24);
-//   // display.setTextColor(WHITE, BLACK);
-//   // display.println("            ");
-//   // display.display();
-//   display.setTextColor(WHITE, BLACK);
-//   display.setCursor(5, 55);
-//   display.println(msg);
-//   display.display();
-//   // delay(100);
-
-//   Serial.println(msg);
-// }
-
-// TODO: del it
-//  void draw_pins(char *msg)
-//  {
-//    display.setCursor(5, 45);
-//    // display.setTextAlignment(TEXT_ALIGN_CENTER);
-//    // display.setFont(ArialMT_Plain_24);
-//    // display.setTextColor(WHITE, BLACK);
-//    // display.println("            ");
-//    // display.display();
-//    display.setTextColor(WHITE, BLACK);
-//    // display.setCursor(5, 45);
-//    const char *msg2 = "Pins: ";
-//    display.println(msg);
-//    display.display();
-//    // delay(100);
-
-//   Serial.println(msg);
-// }
-
 void loop()
 {
   leds.loop();
   struct tm timeinfo;
   oldTime = "";
-  // if (getLocalTime(&timeinfo)) {
-  //     char time_str[16];
-  //     strftime(time_str, 16, "%H:%M:%S", &timeinfo);
 
-  //     if(oldTime != time_str) {
-  //       oldTime = time_str;
-  //       draw_time(time_str);
-  //     }
-  // }
-  // draw_pins("11100000");
   pinValues = read_shift_regs();
 
   if (pinValues != oldPinValues)
   {
     long changedPinNumber = get_changed_pin_number(pinValues, oldPinValues);
-    // print_byte();
     oled096.printByte(pinValues, DATA_WIDTH);
+
     if (changedPinNumber >= 0)
     {
       blink_led(changedPinNumber, 3, 100);
     }
+
     print_leds();
     blink_led(7, 3, 50);
     oldPinValues = pinValues;
@@ -521,9 +379,7 @@ void loop()
     blink(1, 300);
   }
 
-  // print_byte();
   ws.cleanupClients();
-  // delay(1000);
 }
 
 long read_shift_regs()
@@ -550,52 +406,6 @@ long read_shift_regs()
   return (bytesVal);
 }
 
-// TODO: del it
-//  void _print_byte()
-//  {
-//    byte i;
-
-//   Serial.println("*Shift Register Values:*\r\n");
-
-//   for (byte i = 0; i <= DATA_WIDTH - 1; i++)
-//   {
-//     Serial.print("P");
-//     Serial.print(i + 1);
-//     Serial.print(" ");
-//   }
-//   Serial.println();
-//   for (byte i = 0; i <= DATA_WIDTH - 1; i++)
-//   {
-//     Serial.print(pinValues >> i & 1, BIN);
-
-//     if (i > 8)
-//     {
-//       Serial.print(" ");
-//     }
-//     Serial.print("  ");
-//     display.setCursor(5 + i * 10, 45);
-//     display.setTextColor(WHITE, BLACK);
-//     // display.setCursor(5, 45);
-//     const char *msg2 = "Pins: ";
-//     display.println(pinValues >> i & 1, BIN);
-//     display.println(" ");
-//     display.display();
-//   }
-
-//   Serial.println("pinValues");
-//   Serial.print("Pin1:  ");
-//   Serial.println(pinValues >> 0 & 1);
-//   // sw_led(led_pin10, pinValues >> 0 & 1);
-//   Serial.print("Pin2:  ");
-//   Serial.println(pinValues >> 1 & 1);
-//   // sw_led(led_pin11, pinValues >> 1 & 1);
-//   Serial.print("Pin3:  ");
-//   Serial.println(pinValues >> 2 & 1);
-//   // sw_led(led_pin12, pinValues >> 2 & 1);
-//   char *c = (char *)pinValues;
-//   // draw_pins(c);
-// }
-
 void print_leds()
 {
   byte i;
@@ -620,9 +430,6 @@ void blink_led(int id, int times, int blink_delay)
 {
   byte i;
 
-  // reg.write(id, 0);
-  // reg.update();
-
   leds.off(id);
   leds.loop();
 
@@ -630,14 +437,10 @@ void blink_led(int id, int times, int blink_delay)
 
   for (byte i = 0; i < times; i++)
   {
-    // reg.write(id, 1);
-    // reg.update();
     leds.on(id);
     leds.loop();
     delay(blink_delay);
 
-    // reg.write(id, 0);
-    // reg.update();
     leds.off(id);
     leds.loop();
     delay(blink_delay);
