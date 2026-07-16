@@ -13,6 +13,16 @@
 #include <zalcLED.h>
 #include <Oled096.h>
 
+//LedsStateData array of byte
+// bin | 10 - status
+// 000 |  0 - off / empty    - off
+// 001 |  1 - warning        - blink(500 - 1000 ms) 
+// 010 |  2 - error          - blink(200 ms) 
+// 011 |  3 - ok / inserted  - off -> blinkTimes(300, 3) - off
+// 100 |  4 - getReelWaiting - blink(500) -> after pullOut -> blinkTimes(300, 3)
+
+
+
 zalcLED leds;
 Oled096 oled096;
 
@@ -59,6 +69,14 @@ const int ledPin = 2; // TODO del it
 unsigned long pinValues;
 unsigned long oldPinValues;
 
+struct LedsStateData
+{
+  int id; // number of row
+  // float value;
+  byte state[DATA_WIDTH] = {0, 0, 0, 0, 0, 0, 0, 0};
+  u_int8_t state2[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+  int timeStamp;
+};
 // Socket-------------------------------
 //  Create AsyncWebServer object on port 80
 //  AsyncWebServer server(80);
@@ -166,17 +184,25 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     if (strcmp((char *)data, "toggle") == 0)
     {
       ledState = !ledState;
+      Serial.println("msg------------------------");
+      Serial.println("Message recieved: toggle ");
+      Serial.println("msg------------------------");
       notifyClients();
     }
     if (strcmp((char *)data, "blink") == 0)
     {
       // Serial.println("blink");
       // blink(3, 100);
+      Serial.println("msg------------------------");
+      Serial.println("Message recieved: blink ");
+      Serial.println("msg------------------------");
       notifyClients();
     }
     if (strcmp((char *)data, "getData") == 0)
     {
-      // Serial.println("blink");
+      Serial.println("msg------------------------");
+      Serial.println("Message recieved: getData ");
+      Serial.println("msg------------------------");
       // blink(3, 100);
       notifyClients();
     }
