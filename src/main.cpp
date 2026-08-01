@@ -13,16 +13,6 @@
 #include <zalcLED.h>
 #include <Oled096.h>
 
-//LedsStateData array of byte
-// bin | 10 - status
-// 000 |  0 - off / empty    - off
-// 001 |  1 - warning        - blink(500 - 1000 ms) 
-// 010 |  2 - error          - blink(200 ms) 
-// 011 |  3 - ok / inserted  - off -> blinkTimes(300, 3) - off
-// 100 |  4 - getReelWaiting - blink(500) -> after pullOut -> blinkTimes(300, 3)
-
-
-
 zalcLED leds;
 Oled096 oled096;
 
@@ -32,6 +22,7 @@ Oled096 oled096;
 
 long read_shift_regs();
 void print_leds();
+void print_leds_state();
 void blink_led(int id, int times, int blink_delay);
 long get_changed_pin_number(long pinValues, long oldPinValues);
 
@@ -69,14 +60,28 @@ const int ledPin = 2; // TODO del it
 unsigned long pinValues;
 unsigned long oldPinValues;
 
-struct LedsStateData
+// LedsStateData array of byte
+//  bin2| 10 - status
+//-----|----------------------------------------------------------------------------
+//  000 |  0 - off / empty    - off
+//  001 |  1 - on             - on
+//  010 |  2 - error          - blink(200 ms)
+//  011 |  3 - ok / inserted  - off -> blinkTimes(300, 3) - off
+//  100 |  4 - getReelWaiting - blink(500) -> after pullOut -> blinkTimes(300, 3)
+//  101 |  5 - warning        - blink(500 - 1000 ms)
+
+struct LedsStateStatus
 {
   int id; // number of row
   // float value;
-  byte state[DATA_WIDTH] = {0, 0, 0, 0, 0, 0, 0, 0};
+  byte *state[DATA_WIDTH] = {0, 0, 0, 0, 0, 0, 0, 0};
   u_int8_t state2[8] = {0, 0, 0, 0, 0, 0, 0, 0};
   int timeStamp;
 };
+
+LedsStateStatus ledsStateStatus;
+LedsStateStatus oldLedsStateStatus;
+
 // Socket-------------------------------
 //  Create AsyncWebServer object on port 80
 //  AsyncWebServer server(80);
@@ -181,30 +186,71 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
   {
     data[len] = 0;
+
     if (strcmp((char *)data, "toggle") == 0)
     {
-      ledState = !ledState;
+      Serial.println("");
       Serial.println("msg------------------------");
-      Serial.println("Message recieved: toggle ");
+      Serial.println("Message received: toggle ");
       Serial.println("msg------------------------");
-      notifyClients();
+
+      if (ledsStateStatus.state2[0] == 0)
+      {
+        ledsStateStatus.state2[0] = 1;
+        ledsStateStatus.state2[3] = 1;
+      }
+      else
+      {
+        ledsStateStatus.state2[0] = 0;
+        ledsStateStatus.state2[3] = 0;
+      }
     }
+
     if (strcmp((char *)data, "blink") == 0)
     {
       // Serial.println("blink");
       // blink(3, 100);
+      Serial.println("");
       Serial.println("msg------------------------");
-      Serial.println("Message recieved: blink ");
+      Serial.println("Message received: blink ");
       Serial.println("msg------------------------");
       notifyClients();
     }
+
     if (strcmp((char *)data, "getData") == 0)
     {
+      Serial.println("");
       Serial.println("msg------------------------");
-      Serial.println("Message recieved: getData ");
+      Serial.println("Message received: getData ");
       Serial.println("msg------------------------");
       // blink(3, 100);
       notifyClients();
+    }
+
+    if (strcmp((char *)data, "onAll") == 0)
+    {
+      Serial.println("");
+      Serial.println("msg------------------------");
+      Serial.println("Message received: onAll ");
+      Serial.println("msg------------------------");
+
+      for (int i = 0; i < DATA_WIDTH; i++)
+      {
+        ledsStateStatus.state2[i] = 1;
+      }
+    }
+
+    if (strcmp((char *)data, "offAll") == 0)
+    {
+      Serial.println("");
+      Serial.println("msg------------------------");
+      Serial.println("Message received: offAll ");
+      Serial.println("msg------------------------");
+
+      for (int i = 0; i < DATA_WIDTH; i++)
+      {
+        ledsStateStatus.state2[i] = 0;
+      }
     }
   }
 }
@@ -405,6 +451,7 @@ void loop()
     blink(1, 300);
   }
 
+  print_leds_state();
   ws.cleanupClients();
 }
 
@@ -450,6 +497,61 @@ void print_leds()
   }
   leds.loop();
   // reg.update();
+}
+
+// LedsStateData array of byte
+//  bin2| 10 - status
+//-----|----------------------------------------------------------------------------
+//  000 |  0 - off / empty    - off
+//  001 |  1 - on             - on
+//  010 |  2 - error          - blink(200 ms)
+//  011 |  3 - ok / inserted  - off -> blinkTimes(300, 3) - off
+//  100 |  4 - getReelWaiting - blink(500) -> after pullOut -> blinkTimes(300, 3)
+//  101 |  5 - warning        - blink(500 - 1000 ms)
+
+void print_leds_state()
+{
+  byte i;
+
+  for (byte i = 0; i <= DATA_WIDTH - 1; i++)
+  {
+    if (oldLedsStateStatus.state2[i] != ledsStateStatus.state2[i])
+    {
+      switch (ledsStateStatus.state2[i])
+      {
+      case 0: // off / empty
+        leds.off(i);
+        break;
+
+      case 1: // on
+        leds.on(i);
+        break;
+
+      case 2: // error
+        leds.blink1(i, 200);
+        break;
+
+      case 3: // ok / inserted
+        leds.blinkTimes(i, 300, 3);
+        break;
+
+      case 4: // getReelWaiting
+        leds.blink1(i, 500);
+        break;
+
+      case 5: // warning
+        leds.blink1(i, 1000);
+        break;
+
+      default:
+        break;
+      }
+    }
+
+    oldLedsStateStatus.state2[i] = ledsStateStatus.state2[i];
+  }
+
+  leds.loop();
 }
 
 void blink_led(int id, int times, int blink_delay)
