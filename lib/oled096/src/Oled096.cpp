@@ -49,6 +49,7 @@ void Oled096::printWiFi(const char *ssid, const char *password)
     display.println(password);
     display.display();
 }
+
 void Oled096::printWiFiStatus(const String ip)
 {
     display.clearDisplay();
@@ -98,7 +99,7 @@ void Oled096::printByte(const uint32_t pinValues, int dataWidth)
             Serial.print(" ");
         }
         Serial.print("  ");
-        display.setCursor(5 + i * 10, 45);
+        display.setCursor(5 + i * 10, 40);
         display.setTextColor(WHITE, BLACK);
         const char *msg2 = "Pins: ";
         display.println(pinValues >> i & 1, BIN);
@@ -114,4 +115,13 @@ void Oled096::printByte(const uint32_t pinValues, int dataWidth)
     Serial.print("Pin3:  ");
     Serial.println(pinValues >> 2 & 1);
     char *c = (char *)pinValues;
+}
+
+void Oled096::drawStatus(uint8_t ledNumber, uint8_t status)
+{
+    display.setCursor(5, 55);
+    display.setTextColor(WHITE, BLACK);
+    display.setCursor(5 + ledNumber * 10, 50);
+    display.println(status);
+    display.display();
 }

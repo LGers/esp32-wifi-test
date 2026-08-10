@@ -449,9 +449,9 @@ void loop()
     oldPinValues = pinValues;
     notifyClients();
     blink(1, 300);
+    print_leds_state();
   }
 
-  print_leds_state();
   ws.cleanupClients();
 }
 
@@ -547,6 +547,8 @@ void print_leds_state()
         break;
       }
     }
+
+    oled096.drawStatus(i, ledsStateStatus.state2[i]);
 
     oldLedsStateStatus.state2[i] = ledsStateStatus.state2[i];
   }

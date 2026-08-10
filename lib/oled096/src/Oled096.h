@@ -19,6 +19,7 @@ public:
     void printWiFi(const char *ssid, const char *password);
     void printWiFiStatus(const String ip);
     void drawPins(const char *msg);
+    void drawStatus(uint8_t ledNumber, const uint8_t status);
     void printByte(const uint32_t pinValues, int dataWidth);
 };
 
