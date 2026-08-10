@@ -449,8 +449,9 @@ void loop()
     oldPinValues = pinValues;
     notifyClients();
     blink(1, 300);
-    print_leds_state();
   }
+  
+  print_leds_state();
 
   ws.cleanupClients();
 }
