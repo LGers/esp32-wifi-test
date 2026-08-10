@@ -187,6 +187,11 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
   {
     data[len] = 0;
 
+    Serial.println("");
+    Serial.println("data------------------------");
+    Serial.println((char *)data);
+    Serial.println("data------------------------");
+
     if (strcmp((char *)data, "toggle") == 0)
     {
       Serial.println("");
@@ -450,7 +455,7 @@ void loop()
     notifyClients();
     blink(1, 300);
   }
-  
+
   print_leds_state();
 
   ws.cleanupClients();
