@@ -257,6 +257,58 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         ledsStateStatus.state2[i] = 0;
       }
     }
+
+    JsonDocument doc2;
+
+    DeserializationError error = deserializeJson(doc2, data);
+
+    // Test if parsing succeeds.
+    if (error)
+    {
+      Serial.print(F("deserializeJson() failed: "));
+      Serial.println(error.f_str());
+      return;
+    }
+
+    const char *sensor = doc2["sensor"];
+    long time = doc2["time"];
+    double latitude = doc2["data"][0];
+    double longitude = doc2["data"][1];
+
+    long id = doc2["id"];
+    bool status = doc2["status"];
+    long number = doc2["number"];
+    JsonArray arr = doc2["arr"].as<JsonArray>();
+
+    // Print values.
+    Serial.println(sensor);
+    Serial.println(time);
+    Serial.println(latitude, 6);
+
+    Serial.print("id: ");
+    Serial.println(id, 6);
+
+    Serial.print("status: ");
+    Serial.println(status, 6);
+
+    Serial.print("number: ");
+    Serial.println(number, 6);
+
+    Serial.print("arr: ");
+    Serial.println(arr);
+    Serial.println('---------------------');
+
+    // for (int i = 0; i < 3; i++)
+    // {
+    //   Serial.print("arr: ");
+    //   Serial.println(arr);
+    //   Serial.println(arr[i]);
+    // }
+
+    for (JsonVariant v : arr)
+    {
+      Serial.println(v.as<const char *>());
+    }
   }
 }
 
