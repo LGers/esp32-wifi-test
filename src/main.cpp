@@ -279,7 +279,20 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     bool status = doc2["status"];
     long number = doc2["number"];
     JsonArray arr = doc2["arr"].as<JsonArray>();
+    // JsonArray arr = doc2["arr"].to<JsonArray>();
+    // arr2<int> = doc2["arr"];
 
+    JsonDocument doc3;
+    DeserializationError error2 = deserializeJson(doc3, doc2["arr"]);
+
+    // extract the values
+    JsonArray array = doc3.as<JsonArray>();
+    for (JsonVariant v : array)
+    {
+      Serial.println("do3---------------------");
+      Serial.println(v.as<int>());
+      Serial.println("do3---------------------");
+    }
     // Print values.
     Serial.println(sensor);
     Serial.println(time);
@@ -296,13 +309,28 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 
     Serial.print("arr: ");
     Serial.println(arr);
-    Serial.println('---------------------');
+    Serial.println("---------------------");
+
+    Serial.println("arr---------------------");
+    for (JsonVariant v : arr)
+    {
+      Serial.println(v.as<int>());
+    }
+    Serial.println("arr---------------------");
+
+    Serial.println("arr2---------------------");
+    for (JsonVariant v : arr)
+    {
+      Serial.println(v.as<int>());
+    }
+    Serial.println("arr2---------------------");
 
     // for (int i = 0; i < 3; i++)
     // {
     //   Serial.print("arr: ");
     //   Serial.println(arr);
-    //   Serial.println(arr[i]);
+    //   String string_to_print = String(arr[i].c_str());
+    //   Serial.println(String(arr[i]));
     // }
 
     for (JsonVariant v : arr)
