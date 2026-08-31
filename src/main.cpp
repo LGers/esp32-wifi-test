@@ -291,7 +291,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     {
       Serial.println("do3---------------------");
       Serial.println(v.as<int>());
-      Serial.println("do3---------------------");
+      Serial.println("do3+---------------------");
     }
     // Print values.
     Serial.println(sensor);
@@ -319,9 +319,13 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     Serial.println("arr---------------------");
 
     Serial.println("arr2---------------------");
+
+    int i = 0;
     for (JsonVariant v : arr)
     {
       Serial.println(v.as<int>());
+      ledsStateStatus.state2[i] = v.as<int>();
+      i++;
     }
     Serial.println("arr2---------------------");
 
@@ -614,11 +618,11 @@ void print_leds_state()
         break;
 
       case 2: // error
-        leds.blink1(i, 200);
+        leds.blink1(i, 50);
         break;
 
       case 3: // ok / inserted
-        leds.blinkTimes(i, 300, 3);
+        leds.blinkTimes(i, 200, 3);
         break;
 
       case 4: // getReelWaiting
