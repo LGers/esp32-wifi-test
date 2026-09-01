@@ -67,6 +67,8 @@ public:
     void toggle();
 
     unsigned int getPinState(int pinNumber);
+    unsigned int getPinMode(int pinNumber);
+
 
     void loop();
 };

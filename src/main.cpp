@@ -531,13 +531,20 @@ void loop()
     if (changedPinNumber >= 0)
     {
       blink_led(changedPinNumber, 3, 100);
+      // ledsStateStatus.state2[changedPinNumber] = 5;
     }
 
-    print_leds();
-    blink_led(7, 3, 50);
+    // if (changedPinNumber >= 0 && leds.getPinMode(changedPinNumber) == 0 && leds.getPinState(changedPinNumber) == 0)
+    // {
+    //   ledsStateStatus.state2[changedPinNumber] = 0;
+    // }
+
+    // print_leds();
+    // print_leds_state();
+    // blink_led(7, 3, 50);
     oldPinValues = pinValues;
     notifyClients();
-    blink(1, 300);
+    // blink(1, 300);
   }
 
   print_leds_state();

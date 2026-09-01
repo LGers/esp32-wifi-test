@@ -40,7 +40,7 @@ ledState_struct ledsState2[8];
 
 zalcLED::zalcLED()
 {
-    //TODO: custom num of LEDs
+    // TODO: custom num of LEDs
     for (int i = 0; i < 8; i++)
     {
         ledsState2[i].id = i;
@@ -114,6 +114,11 @@ void zalcLED::toggle() {
 unsigned int zalcLED::getPinState(int pinNumber)
 {
     return ledsState2[pinNumber].isLedOn;
+};
+
+unsigned int zalcLED::getPinMode(int pinNumber)
+{
+    return ledsState2[pinNumber].mode;
 };
 
 // LOOP----------------------------------
