@@ -241,6 +241,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 
       for (int i = 0; i < DATA_WIDTH; i++)
       {
+        oldLedsStateStatus.state2[i] = 0;
         ledsStateStatus.state2[i] = 1;
       }
     }
@@ -254,6 +255,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 
       for (int i = 0; i < DATA_WIDTH; i++)
       {
+        oldLedsStateStatus.state2[i] = (u_int8_t)1;
         ledsStateStatus.state2[i] = 0;
       }
     }
@@ -270,6 +272,43 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
       return;
     }
 
+    // if (strcmp((char *)doc2["dataType"], "emptySlots") == 0)
+    if (doc2["dataType"] == "emptySlots")
+    {
+      // leds.offAll();
+      // leds.loop();
+      for (int i = 0; i < DATA_WIDTH; i++)
+      {
+        oldLedsStateStatus.state2[i] = (u_int8_t)1;
+        ledsStateStatus.state2[i] = 0;
+      }
+      JsonArray emptySlots = doc2["data"].as<JsonArray>();
+      for (JsonVariant v : emptySlots)
+      {
+        ledsStateStatus.state2[v.as<int>()] = 5; // Warning
+      }
+    }
+
+    if (doc2["dataType"] == "changedSlot")
+    {
+      int slotId = doc2["id"];
+
+      if (doc2["status"] == "warning" || doc2["status"] == "ok") {
+        ledsStateStatus.state2[slotId] = 0;
+      }
+      
+      if (doc2["status"] == "empty") {
+        ledsStateStatus.state2[slotId] = 5;
+      }
+    }
+
+
+    // JsonArray emptySlots = doc2["data"].as<JsonArray>();
+    // for (JsonVariant v : emptySlots)
+    // {
+    //   ledsStateStatus.state2[v.as<int>()] = 5; // Warning
+    // }
+
     const char *sensor = doc2["sensor"];
     long time = doc2["time"];
     double latitude = doc2["data"][0];
@@ -279,8 +318,6 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     bool status = doc2["status"];
     long number = doc2["number"];
     JsonArray arr = doc2["arr"].as<JsonArray>();
-    // JsonArray arr = doc2["arr"].to<JsonArray>();
-    // arr2<int> = doc2["arr"];
 
     JsonDocument doc3;
     DeserializationError error2 = deserializeJson(doc3, doc2["arr"]);
@@ -294,9 +331,12 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
       Serial.println("do3+---------------------");
     }
     // Print values.
+    Serial.println("+++sensor, time, latitude, longitude");
     Serial.println(sensor);
     Serial.println(time);
     Serial.println(latitude, 6);
+    Serial.println(longitude, 6);
+    Serial.println("---sensor, time, latitude, longitude");
 
     Serial.print("id: ");
     Serial.println(id, 6);
@@ -328,19 +368,6 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
       i++;
     }
     Serial.println("arr2---------------------");
-
-    // for (int i = 0; i < 3; i++)
-    // {
-    //   Serial.print("arr: ");
-    //   Serial.println(arr);
-    //   String string_to_print = String(arr[i].c_str());
-    //   Serial.println(String(arr[i]));
-    // }
-
-    for (JsonVariant v : arr)
-    {
-      Serial.println(v.as<const char *>());
-    }
   }
 }
 
@@ -612,38 +639,38 @@ void print_leds_state()
 
   for (byte i = 0; i <= DATA_WIDTH - 1; i++)
   {
-    if (oldLedsStateStatus.state2[i] != ledsStateStatus.state2[i])
+    // if (oldLedsStateStatus.state2[i] != ledsStateStatus.state2[i])
+    // {
+    switch (ledsStateStatus.state2[i])
     {
-      switch (ledsStateStatus.state2[i])
-      {
-      case 0: // off / empty
-        leds.off(i);
-        break;
+    case 0: // off / empty
+      leds.off(i);
+      break;
 
-      case 1: // on
-        leds.on(i);
-        break;
+    case 1: // on
+      leds.on(i);
+      break;
 
-      case 2: // error
-        leds.blink1(i, 50);
-        break;
+    case 2: // error
+      leds.blink1(i, 50);
+      break;
 
-      case 3: // ok / inserted
-        leds.blinkTimes(i, 200, 3);
-        break;
+    case 3: // ok / inserted
+      leds.blinkTimes(i, 200, 3);
+      break;
 
-      case 4: // getReelWaiting
-        leds.blink1(i, 500);
-        break;
+    case 4: // getReelWaiting
+      leds.blink1(i, 500);
+      break;
 
-      case 5: // warning
-        leds.blink1(i, 1000);
-        break;
+    case 5: // warning
+      leds.blink1(i, 1000);
+      break;
 
-      default:
-        break;
-      }
+    default:
+      break;
     }
+    // }
 
     oled096.drawStatus(i, ledsStateStatus.state2[i]);
 
